@@ -134,7 +134,6 @@ public class ChunkingTest {
                 @Override
                 protected void initChannel(Channel ch) throws Exception {
                     ChannelPipeline pipeline = ch.pipeline();
-
                     pipeline.addLast("httpHandler", new HttpClientCodec());
                     pipeline.addLast("chunkedWriter", new ChunkedWriteHandler());
                     pipeline.addLast("httpProcessor", new WriteStreamHandler(latch, status, responseBodySize));
@@ -147,7 +146,7 @@ public class ChunkingTest {
             f.addListener(new ChannelFutureListener() {
 
                 public void operationComplete(ChannelFuture future) throws Exception {
-                    
+
                     DefaultHttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, getTargetUrl());
                     request.headers().add(HttpHeaders.Names.ACCEPT, "*/*");
                     request.headers().set(HttpHeaders.Names.TRANSFER_ENCODING, HttpHeaders.Values.CHUNKED);
@@ -187,9 +186,10 @@ public class ChunkingTest {
                 HttpResponse response = (HttpResponse) e;
                 status.set(response.getStatus().code());
                 
-            } else if (e instanceof HttpContent) {
+            }
+            if (e instanceof HttpContent) {
                 HttpContent chunk = (HttpContent) e;
-                responseBodySize.set(chunk.content().readableBytes());
+                responseBodySize.set(responseBodySize.get() + chunk.content().readableBytes());
                 if (e instanceof LastHttpContent) {
                     latch.countDown();
                 }
@@ -197,3 +197,4 @@ public class ChunkingTest {
         }
     }
 }
+
